@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Form Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      min-height: 100vh;
+      color: #eee;
+      padding: 30px 15px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #00d4ff;
+      text-shadow: 0 0 10px rgba(0,212,255,0.4);
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 750px;
+      margin: 0 auto 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.4rem; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.8rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"] {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus {
+      border-color: #00d4ff;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      padding: 10px 0;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #eee;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="radio"],
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #00d4ff;
+      cursor: pointer;
+    }
+
+    /* Photo Upload */
+    .photo-upload {
+      border: 2px dashed rgba(0,212,255,0.4);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .photo-upload:hover { border-color: #00d4ff; background: rgba(0,212,255,0.05); }
+    .photo-upload input { display: none; }
+    .photo-upload p { color: #aaa; font-size: 0.9rem; margin-top: 8px; }
+    .photo-upload .icon { font-size: 2.5rem; }
+    #photo-preview {
+      max-width: 120px;
+      max-height: 140px;
+      border-radius: 8px;
+      margin-top: 12px;
+      border: 2px solid #00d4ff;
+      display: none;
+    }
+
+    /* Server URL */
+    .server-url-wrap {
+      margin-bottom: 22px;
+    }
+    .server-url-wrap label {
+      display: block;
+      font-size: 0.8rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .server-url-wrap input {
+      width: 100%;
+      background: rgba(255,165,0,0.08);
+      border: 1px solid rgba(255,165,0,0.4);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #ffb347;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .server-url-wrap input:focus {
+      border-color: #ffb347;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #00d4ff, #0077ff);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Error Box */
+    .error-box {
+      background: rgba(255, 60, 60, 0.12);
+      border: 1px solid rgba(255,60,60,0.4);
+      border-radius: 10px;
+      padding: 15px;
+      color: #ff8080;
+      margin-top: 15px;
+      display: none;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Loader Overlay */
+    #loader-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 30, 0.9);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #loader-overlay.active { display: flex; }
+
+    .loader-box {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 40px 50px;
+      text-align: center;
+      min-width: 300px;
+      max-width: 90vw;
+    }
+
+    .spinner {
+      width: 70px;
+      height: 70px;
+      border: 5px solid rgba(255,255,255,0.1);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-title {
+      font-size: 1.2rem;
+      color: #00d4ff;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .loader-status {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 20px;
+      min-height: 20px;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00d4ff, #0077ff);
+      border-radius: 50px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-pct {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    /* Result */
+    #result-section {
+      display: none;
+      max-width: 750px;
+      margin: 0 auto;
+    }
+    #result-section.show { display: block; }
+
+    .result-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 16px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .result-card h2 {
+      color: #00d4ff;
+      margin-bottom: 8px;
+      font-size: 1.5rem;
+    }
+
+    #result-img {
+      max-width: 100%;
+      border-radius: 10px;
+      border: 2px solid rgba(0,212,255,0.3);
+      box-shadow: 0 0 30px rgba(0,212,255,0.15);
+    }
+
+    .btn-download {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #00d4ff, #0077ff);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      font-size: 1rem;
+    }
+    .btn-download:hover { opacity: 0.85; }
+
+    .btn-new {
+      display: inline-block;
+      margin-top: 12px;
+      margin-left: 10px;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #eee;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .btn-new:hover { background: rgba(255,255,255,0.15); }
+  </style>
+</head>
+<body>
+
+  <h1>🎓 Student Form Generator</h1>
+
+  <!-- Form Card -->
+  <div class="card" id="form-card">
+
+    <!-- Server URL -->
+    <div class="server-url-wrap">
+      <label>⚡ PythonAnywhere Server URL</label>
+      <input type="text" id="server-url"
+        placeholder="https://yourname.pythonanywhere.com" value="https://abc87.pythonanywhere.com/"/>
+    </div>
+
+    <form id="student-form">
+      <div class="form-grid">
+
+        <div class="field">
+          <label>Student Name *</label>
+          <input type="text" name="student_name" required placeholder="Full Name" />
+        </div>
+
+        <div class="field">
+          <label>Father's Name *</label>
+          <input type="text" name="father_name" required placeholder="Father's Full Name" />
+        </div>
+
+        <div class="field">
+          <label>Mother's Name</label>
+          <input type="text" name="mother_name" placeholder="Mother's Full Name" />
+        </div>
+
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="text" name="date_of_birth" placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="field">
+          <label>Email ID</label>
+          <input type="email" name="email_id" placeholder="student@email.com" />
+        </div>
+
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" name="phone_number" placeholder="10-digit number" />
+        </div>
+
+        <div class="field">
+          <label>Class</label>
+          <input type="text" name="class_text" placeholder="e.g. 10th" />
+        </div>
+
+        <div class="field">
+          <label>Session Year</label>
+          <input type="text" name="session_year" placeholder="e.g. 2026-27" />
+        </div>
+
+        <div class="field">
+          <label>Date of Admission</label>
+          <input type="text" name="date_of_admission" placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="field">
+          <label>Aadhar No.</label>
+          <input type="text" name="aadhar_no" placeholder="12-digit Aadhar" />
+        </div>
+
+        <div class="field full">
+          <label>School Name</label>
+          <input type="text" name="school" placeholder="School / Institution Name" />
+        </div>
+
+        <div class="field full">
+          <label>Address</label>
+          <input type="text" name="address" placeholder="Full Address" />
+        </div>
+
+        <!-- Gender -->
+        <div class="field full">
+          <label>Gender</label>
+          <div class="checkbox-group">
+            <label><input type="radio" name="gender" value="M" /> Male</label>
+            <label><input type="radio" name="gender" value="F" /> Female</label>
+          </div>
+        </div>
+
+        <!-- Subjects -->
+        <div class="field full">
+          <label>Subjects Selected</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="math-check" /> Mathematics</label>
+            <label><input type="checkbox" id="science-check" /> Science</label>
+          </div>
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="field full">
+          <label>Student Photo</label>
+          <div class="photo-upload" onclick="document.getElementById('photo-input').click()">
+            <div class="icon">📷</div>
+            <p id="photo-label">Click to upload student photo</p>
+            <input type="file" id="photo-input" accept="image/*" onchange="previewPhoto(this)" />
+            <img id="photo-preview" alt="Preview" />
+          </div>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn-submit" id="submit-btn">🚀 Generate Form</button>
+      <div class="error-box" id="error-box"></div>
+    </form>
+  </div>
+
+  <!-- Result Section -->
+  <div id="result-section">
+    <div class="result-card">
+      <h2>✅ Form Generated Successfully!</h2>
+      <br/>
+      <img id="result-img" src="" alt="Generated Student Form" />
+      <br/>
+      <a id="download-btn" class="btn-download" download="student_form.png">⬇️ Download Form</a>
+      <button class="btn-new" onclick="resetForm()">➕ New Form</button>
+    </div>
+  </div>
+
+  <!-- Loader Overlay -->
+  <div id="loader-overlay">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <div class="loader-title">Generating Form...</div>
+      <div class="loader-status" id="loader-status">Preparing data...</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-pct" id="progress-pct">0%</div>
+    </div>
+  </div>
+
+  <script>
+    // ── Photo Preview ──────────────────────────
+    function previewPhoto(input) {
+      const preview = document.getElementById('photo-preview');
+      const label   = document.getElementById('photo-label');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          label.textContent = '✅ ' + input.files[0].name;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // ── Progress ───────────────────────────────
+    function setProgress(pct, status) {
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-pct').textContent = pct + '%';
+      if (status) document.getElementById('loader-status').textContent = status;
+    }
+
+    function showLoader() {
+      setProgress(0, 'Preparing data...');
+      document.getElementById('loader-overlay').classList.add('active');
+    }
+
+    function hideLoader() {
+      document.getElementById('loader-overlay').classList.remove('active');
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      box.textContent = '❌ ' + msg;
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideError() {
+      document.getElementById('error-box').style.display = 'none';
+    }
+
+    // ── Fake Progress ──────────────────────────
+    let progressInterval = null;
+
+    function startFakeProgress() {
+      const steps = [
+        { pct: 10, msg: 'Uploading data to server...' },
+        { pct: 25, msg: 'Loading template image...' },
+        { pct: 40, msg: 'Placing text on form...' },
+        { pct: 55, msg: 'Processing student photo...' },
+        { pct: 70, msg: 'Compositing final form...' },
+        { pct: 82, msg: 'Finalizing image...' },
+      ];
+      let i = 0;
+      let slowPct = 82;
+
+      progressInterval = setInterval(() => {
+        if (i < steps.length) {
+          setProgress(steps[i].pct, steps[i].msg);
+          i++;
+        } else {
+          if (slowPct < 98) {
+            slowPct++;
+            setProgress(slowPct, 'Server is processing, please wait...');
+          }
+        }
+      }, 1200);
+    }
+
+    function stopFakeProgress() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+    }
+
+    // ── Reset ──────────────────────────────────
+    function resetForm() {
+      document.getElementById('student-form').reset();
+      document.getElementById('photo-preview').style.display = 'none';
+      document.getElementById('photo-label').textContent = 'Click to upload student photo';
+      document.getElementById('result-section').classList.remove('show');
+      hideError();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── Submit ─────────────────────────────────
+    document.getElementById('student-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      hideError();
+
+      const serverUrl = document.getElementById('server-url').value.trim().replace(/\/$/, '');
+      if (!serverUrl) {
+        showError('Please enter your PythonAnywhere server URL at the top!');
+        return;
+      }
+
+      // Build FormData manually
+      const formData = new FormData();
+
+      const textFields = [
+        'student_name', 'father_name', 'mother_name',
+        'date_of_birth', 'email_id', 'phone_number',
+        'class_text', 'session_year', 'date_of_admission',
+        'aadhar_no', 'school', 'address'
+      ];
+      textFields.forEach(name => {
+        const el = this.querySelector(`[name="${name}"]`);
+        if (el) formData.append(name, el.value);
+      });
+
+      // Gender
+      const genderRadio = this.querySelector('input[name="gender"]:checked');
+      formData.append('gender', genderRadio ? genderRadio.value : '');
+
+      // Subjects
+      formData.append('mathematics', document.getElementById('math-check').checked ? 'Y' : 'N');
+      formData.append('science',     document.getElementById('science-check').checked ? 'Y' : 'N');
+
+      // Photo
+      const photoInput = document.getElementById('photo-input');
+      if (photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+      }
+
+      // Show loader
+      showLoader();
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('result-section').classList.remove('show');
+      startFakeProgress();
+
+      try {
+        const response = await fetch(`${serverUrl}/generate`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        stopFakeProgress();
+
+        if (response.ok) {
+          // ✅ Server returns raw PNG — read as blob
+          setProgress(97, 'Receiving generated form...');
+
+          const blob = await response.blob();
+          const imageUrl = URL.createObjectURL(blob);
+
+          setProgress(100, '✅ Done!');
+
+          setTimeout(() => {
+            hideLoader();
+            document.getElementById('result-img').src = imageUrl;
+            document.getElementById('download-btn').href = imageUrl;
+            document.getElementById('result-section').classList.add('show');
+            document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+          }, 600);
+
+        } else {
+          // Server error — try to read JSON error message
+          let errMsg = `Server error: ${response.status}`;
+          try {
+            const errData = await response.json();
+            errMsg = errData.error || errMsg;
+          } catch (_) {}
+          hideLoader();
+          showError(errMsg);
+        }
+
+      } catch (err) {
+        stopFakeProgress();
+        hideLoader();
+        showError('Could not connect to server. Make sure your PythonAnywhere web app is running. Error: ' + err.message);
+      }
+
+      document.getElementById('submit-btn').disabled = false;
+    });
+  </script>
+
+</body>
+</html>

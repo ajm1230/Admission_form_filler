@@ -306,7 +306,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--mono);display:flex;h
 </div>
 
 <div class="toast" id="toast"></div>
-
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
 <script>
 /* ── SIDEBAR ── */
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-back').classList.toggle('open')}

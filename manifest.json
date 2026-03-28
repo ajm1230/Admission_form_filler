@@ -1,7 +1,7 @@
 {
   "name": "Eklavya Management",
   "short_name": "Eklavya",
-  "start_url": "/Admission_form_filler/fg.html",
+  "start_url": "./fg.html",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#ffcc00",

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Form Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Unbounded:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0f0b;--surf:#131510;--card:#1a1d14;--bord:#252820;
+  --am:#e8a030;--am2:#f5c842;--gr:#6fcf6f;--rd:#e05050;--bl:#5ba0e8;
+  --tx:#d8d4c0;--mt:#58594a;
+  --mono:'IBM Plex Mono',monospace;--disp:'Unbounded',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:210px;background:var(--surf);border-right:1px solid var(--bord);display:flex;flex-direction:column;flex-shrink:0;transition:transform .26s ease;z-index:200}
+.sb-logo{padding:18px 14px 14px;border-bottom:1px solid var(--bord)}
+.sb-logo-name{font-family:var(--disp);font-size:.65rem;font-weight:900;color:var(--am);letter-spacing:1px;line-height:1.4}
+.sb-logo-sub{font-size:.55rem;color:var(--mt);margin-top:2px}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sb-sec{font-size:.55rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;padding:6px 8px 3px}
+.sb-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:6px;text-decoration:none;color:var(--mt);font-size:.74rem;border:1px solid transparent;transition:all .14s;white-space:nowrap}
+.sb-link:hover{color:var(--tx);background:var(--card);border-color:var(--bord)}
+.sb-link.active{color:var(--am);background:rgba(232,160,48,.09);border-color:rgba(232,160,48,.22)}
+.sb-link .ico{font-size:.9rem;flex-shrink:0;width:18px;text-align:center}
+.sb-foot{padding:10px 14px;border-top:1px solid var(--bord);font-size:.52rem;color:var(--mt)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:50px;padding:0 14px;border-bottom:1px solid var(--bord);background:var(--surf);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.menu-btn{display:none;background:none;border:none;color:var(--mt);font-size:1.2rem;cursor:pointer;padding:4px 6px;border-radius:5px}
+.menu-btn:hover{color:var(--tx)}
+.page-title{font-family:var(--disp);font-size:.72rem;font-weight:900;color:var(--am);letter-spacing:.5px;white-space:nowrap}
+.server-inp{background:var(--card);border:1px solid rgba(232,160,48,.25);border-radius:5px;padding:6px 10px;color:var(--am);font-family:var(--mono);font-size:.68rem;outline:none;flex:1;max-width:300px}
+.mode-tabs{display:flex;gap:6px;margin-left:auto}
+.mode-tab{padding:5px 12px;border-radius:5px;border:1px solid var(--bord);background:var(--card);color:var(--mt);font-size:.7rem;cursor:pointer;transition:all .14s;font-family:var(--mono)}
+.mode-tab:hover{color:var(--tx);border-color:var(--am)}
+.mode-tab.active{color:var(--am);border-color:var(--am);background:rgba(232,160,48,.08)}
+.mode-tab.fast.active{color:var(--am2);border-color:var(--am2);background:rgba(245,200,66,.08)}
+
+/* FORM AREA */
+.form-scroll{flex:1;overflow-y:auto;padding:20px}
+.form-scroll::-webkit-scrollbar{width:4px}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--bord);border-radius:2px}
+.form-card{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:24px;max-width:720px;margin:0 auto}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:.8px}
+.field input,.field select{background:rgba(255,255,255,.05);border:1px solid var(--bord);border-radius:6px;padding:9px 11px;color:var(--tx);font-family:var(--mono);font-size:.82rem;outline:none;transition:border-color .18s;width:100%}
+.field input:focus,.field select:focus{border-color:var(--am)}
+.field input::placeholder{color:var(--mt)}
+.field input:disabled{opacity:.5;cursor:not-allowed;border-color:rgba(232,160,48,.2)!important;color:var(--am)!important}
+
+/* auto-label row */
+.label-row{display:flex;align-items:center;justify-content:space-between}
+.auto-tog{display:flex;align-items:center;gap:5px;cursor:pointer}
+.auto-tog input[type=checkbox]{width:13px;height:13px;accent-color:var(--am);cursor:pointer}
+.auto-tog span{font-size:.6rem;color:var(--am);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
+/* radio/checkbox groups */
+.rb-group,.cb-group{display:flex;gap:16px;flex-wrap:wrap;padding:6px 0}
+.rb-group label,.cb-group label{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--tx);cursor:pointer}
+.rb-group input,.cb-group input{width:16px;height:16px;accent-color:var(--am);cursor:pointer}
+
+/* photo */
+.photo-box{border:2px dashed rgba(232,160,48,.3);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .18s}
+.photo-box:hover{border-color:var(--am);background:rgba(232,160,48,.04)}
+.photo-box input{display:none}
+.photo-icon{font-size:2rem;opacity:.5}
+.photo-lbl{font-size:.76rem;color:var(--mt);margin-top:6px}
+#photo-prev{max-width:100px;max-height:120px;border-radius:6px;margin-top:10px;border:2px solid var(--am);display:none}
+
+/* submit area */
+.submit-area{margin-top:20px;max-width:720px;margin-left:auto;margin-right:auto;padding:0 0 20px}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn{padding:11px 0;border-radius:8px;font-family:var(--mono);font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .16s;flex:1;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-normal{background:linear-gradient(135deg,var(--am),var(--am2));color:#0d0f0b}
+.btn-normal:hover{opacity:.88;transform:translateY(-1px)}
+.btn-normal:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-fast{background:var(--card);border:1px solid var(--am2);color:var(--am2)}
+.btn-fast:hover{background:rgba(245,200,66,.1);transform:translateY(-1px)}
+.btn-fast:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* PROGRESS */
+.progress-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:900;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(7px)}
+.progress-overlay.open{display:flex}
+.progress-box{background:var(--card);border:1px solid var(--bord);border-radius:14px;padding:36px 44px;text-align:center;min-width:300px;max-width:90vw}
+.prog-title{font-family:var(--disp);font-size:.85rem;color:var(--am);margin-bottom:5px}
+.prog-sub{font-size:.7rem;color:var(--mt);margin-bottom:16px;min-height:18px}
+.prog-bar-wrap{background:var(--bord);border-radius:3px;height:5px;overflow:hidden;margin-bottom:12px}
+.prog-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--am),var(--am2));transition:width .38s ease;border-radius:3px}
+.prog-pct{font-size:1.6rem;font-weight:600;color:var(--tx)}
+
+/* RESULT */
+.result-card{background:var(--card);border:1px solid rgba(111,207,111,.25);border-radius:12px;padding:22px;text-align:center;max-width:720px;margin:0 auto}
+.result-title{font-family:var(--disp);font-size:.82rem;color:var(--gr);margin-bottom:14px}
+.result-img{max-width:100%;border-radius:8px;border:1px solid var(--bord);box-shadow:0 0 30px rgba(232,160,48,.1)}
+.result-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.res-btn{padding:9px 20px;border-radius:7px;font-family:var(--mono);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .14s;text-decoration:none;border:1px solid var(--bord)}
+.res-btn-dl{background:var(--am);color:#0d0f0b;border-color:var(--am)}
+.res-btn-dl:hover{opacity:.85}
+.res-btn-new{background:var(--card);color:var(--tx)}
+.res-btn-new:hover{border-color:var(--am);color:var(--am)}
+
+/* fast mode banner */
+.fast-banner{background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.2);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:.74rem;color:var(--am2);display:none}
+.fast-banner.show{display:block}
+
+/* error */
+.err-box{background:rgba(224,80,80,.08);border:1px solid rgba(224,80,80,.3);border-radius:7px;padding:12px;color:var(--rd);font-size:.78rem;margin-top:12px;display:none;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:10px 15px;font-size:.72rem;z-index:9999;transform:translateY(50px);opacity:0;transition:all .26s cubic-bezier(.34,1.56,.64,1);max-width:280px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--gr);color:var(--gr)}
+.toast.error{border-color:var(--rd);color:var(--rd)}
+.toast.info{border-color:var(--am);color:var(--am)}
+
+/* sb backdrop */
+.sb-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190}
+
+@media(max-width:700px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);box-shadow:3px 0 24px rgba(0,0,0,.5)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-back.open{display:block}
+  .menu-btn{display:block}
+  .form-grid{grid-template-columns:1fr}
+  .mode-tabs{display:none}
+  .server-inp{max-width:none;flex:1}
+}
+@media(max-width:480px){
+  .form-scroll{padding:12px}
+  .form-card{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="sb-back" id="sb-back" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-name">EDU<br/>RECORDS</div>
+    <div class="sb-logo-sub">Student Management System</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Pages</div>
+    <a href="fg.html"  class="sb-link active"><span class="ico">📝</span>Form Generator</a>
+    <a href="fv.html"  class="sb-link"><span class="ico">🗂️</span>Files Viewer</a>
+    <a href="fd.html"  class="sb-link"><span class="ico">⬇️</span>Form Download</a>
+    <a href="fs.html"  class="sb-link"><span class="ico">⚙️</span>File Status</a>
+  </nav>
+  <div class="sb-foot">v2.0 · Form Generator</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="page-title">📝 FORM GENERATOR</div>
+    <input class="server-inp" type="text" id="server-url" value="https://abc87.pythonanywhere.com" placeholder="Server URL"/>
+    <div class="mode-tabs">
+      <div class="mode-tab active" id="tab-normal" onclick="setMode('normal')">💾 Normal</div>
+      <div class="mode-tab fast"   id="tab-fast"   onclick="setMode('fast')">⚡ Fast</div>
+    </div>
+  </div>
+
+  <div class="form-scroll" id="form-scroll">
+    <div class="form-card">
+      <form id="student-form">
+        <div class="form-grid">
+
+          <div class="field">
+            <label>Student Name *</label>
+            <input type="text" name="student_name" required placeholder="Full name"/>
+          </div>
+          <div class="field">
+            <label>Father's Name *</label>
+            <input type="text" name="father_name" required placeholder="Father's full name"/>
+          </div>
+          <div class="field">
+            <label>Mother's Name</label>
+            <input type="text" name="mother_name" placeholder="Mother's full name"/>
+          </div>
+          <div class="field">
+            <label>Date of Birth</label>
+            <input type="text" name="date_of_birth" data-date placeholder="DD/MM/YYYY" maxlength="10"/>
+          </div>
+          <div class="field">
+            <label>Email ID</label>
+            <input type="email" name="email_id" placeholder="student@email.com"/>
+          </div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" name="phone_number" placeholder="10-digit number"/>
+          </div>
+          <div class="field">
+            <label>Class</label>
+            <input type="text" name="class_text" placeholder="e.g. 9"/>
+          </div>
+
+          <!-- Session Year with Auto -->
+          <div class="field">
+            <div class="label-row">
+              <label>Session Year</label>
+              <label class="auto-tog"><input type="checkbox" id="sess-auto" onchange="toggleSessAuto()"/><span>⚡ Auto</span></label>
+            </div>
+            <input type="text" name="session_year" id="sess-inp" placeholder="e.g. 2026-27"/>
+          </div>
+
+          <!-- Admission Date with Auto -->
+          <div class="field">
+            <div class="label-row">
+              <label>Date of Admission *</label>
+              <label class="auto-tog"><input type="checkbox" id="adm-auto" onchange="toggleAdmAuto()"/><span>⚡ Auto</span></label>
+            </div>
+            <input type="text" name="date_of_admission" id="adm-inp" data-date placeholder="DD/MM/YYYY" maxlength="10" required/>
+          </div>
+
+          <div class="field">
+            <label>Aadhar No.</label>
+            <input type="text" name="aadhar_no" placeholder="12-digit Aadhar"/>
+          </div>
+          <div class="field full">
+            <label>School Name</label>
+            <input type="text" name="school" placeholder="School / Institution"/>
+          </div>
+          <div class="field full">
+            <label>Address</label>
+            <input type="text" name="address" placeholder="Full address"/>
+          </div>
+
+          <div class="field full">
+            <label>Gender</label>
+            <div class="rb-group">
+              <label><input type="radio" name="gender" value="M"/> Male</label>
+              <label><input type="radio" name="gender" value="F"/> Female</label>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Subjects</label>
+            <div class="cb-group">
+              <label><input type="checkbox" id="math-cb"/> Mathematics</label>
+              <label><input type="checkbox" id="sci-cb"/> Science</label>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Student Photo</label>
+            <div class="photo-box" onclick="document.getElementById('photo-inp').click()">
+              <div class="photo-icon">📷</div>
+              <div class="photo-lbl" id="photo-lbl">Click to upload photo</div>
+              <input type="file" id="photo-inp" accept="image/*" onchange="prevPhoto(this)"/>
+              <img id="photo-prev" alt="preview"/>
+            </div>
+          </div>
+
+        </div><!-- /form-grid -->
+      </form>
+    </div><!-- /form-card -->
+
+    <!-- SUBMIT -->
+    <div class="submit-area">
+      <div class="btn-row">
+        <button class="btn btn-normal" id="btn-normal" onclick="submitForm('normal')">💾 Generate &amp; Save</button>
+        <button class="btn btn-fast"   id="btn-fast"   onclick="submitForm('fast')">⚡ Fast Generate</button>
+      </div>
+      <div class="fast-banner" id="fast-banner">
+        ⚡ Fast mode: Form saved instantly to server. PDF generates in background — check <a href="fs.html" style="color:var(--am2)">File Status</a> for progress.
+      </div>
+      <div class="err-box" id="err-box"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result-wrap" style="display:none;padding-bottom:30px">
+      <div class="result-card">
+        <div class="result-title">✅ Form Generated Successfully</div>
+        <img id="result-img" class="result-img" src="" alt="Generated form"/>
+        <div class="result-actions">
+          <a id="dl-btn" class="res-btn res-btn-dl" download="student_form.png">⬇️ Download</a>
+          <button class="res-btn res-btn-new" onclick="resetForm()">➕ New Form</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /form-scroll -->
+</div><!-- /main -->
+
+<!-- PROGRESS OVERLAY -->
+<div class="progress-overlay" id="prog-overlay">
+  <div class="progress-box">
+    <div class="prog-title" id="prog-title">Generating Form…</div>
+    <div class="prog-sub"   id="prog-sub">Preparing…</div>
+    <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-fill"></div></div>
+    <div class="prog-pct"   id="prog-pct">0%</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── SIDEBAR ── */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-back').classList.toggle('open')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-back').classList.remove('open')}
+
+/* ── DATE AUTO-FORMAT ── */
+function initDate(el){
+  el.addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'').slice(0,8),o='';
+    if(v.length>0)o=v.slice(0,2);
+    if(v.length>2)o+='/'+v.slice(2,4);
+    if(v.length>4)o+='/'+v.slice(4,8);
+    this.value=o;
+  });
+}
+document.querySelectorAll('[data-date]').forEach(initDate);
+
+/* ── SESSION AUTO ── */
+function getSessionYear(){
+  const m=new Date().getMonth()+1,y=new Date().getFullYear();
+  return m>=3?`${y}-${String(y+1).slice(-2)}`:`${y-1}-${String(y).slice(-2)}`;
+}
+function toggleSessAuto(){
+  const cb=document.getElementById('sess-auto'),inp=document.getElementById('sess-inp');
+  if(cb.checked){inp.value=getSessionYear();inp.disabled=true}
+  else{inp.value='';inp.disabled=false;inp.focus()}
+}
+
+/* ── ADMISSION AUTO ── */
+function todayDMY(){
+  const d=new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+function toggleAdmAuto(){
+  const cb=document.getElementById('adm-auto'),inp=document.getElementById('adm-inp');
+  if(cb.checked){inp.value=todayDMY();inp.disabled=true;inp.removeAttribute('required')}
+  else{inp.value='';inp.disabled=false;inp.setAttribute('required','');inp.focus()}
+}
+
+/* ── PHOTO PREVIEW ── */
+function prevPhoto(input){
+  const prev=document.getElementById('photo-prev'),lbl=document.getElementById('photo-lbl');
+  if(input.files&&input.files[0]){
+    const r=new FileReader();
+    r.onload=e=>{prev.src=e.target.result;prev.style.display='block';lbl.textContent='✅ '+input.files[0].name};
+    r.readAsDataURL(input.files[0]);
+  }
+}
+
+/* ── MODE ── */
+let _mode='normal';
+function setMode(m){
+  _mode=m;
+  document.getElementById('tab-normal').className='mode-tab'+(m==='normal'?' active':'');
+  document.getElementById('tab-fast').className='mode-tab fast'+(m==='fast'?' active':'');
+}
+
+/* ── PROGRESS ── */
+let _pTimer=null,_pStep=0;
+const _pSteps=[
+  [8,'Uploading data to server…'],
+  [20,'Loading template image…'],
+  [35,'Writing student info…'],
+  [50,'Rendering form…'],
+  [65,'Processing photo…'],
+  [78,'Converting to PDF…'],
+  [88,'Embedding data…'],
+  [95,'Saving files…'],
+];
+function showProg(title){
+  document.getElementById('prog-title').textContent=title||'Generating Form…';
+  document.getElementById('prog-sub').textContent='Starting…';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('prog-pct').textContent='0%';
+  document.getElementById('prog-overlay').classList.add('open');
+  _pStep=0;
+  _pTimer=setInterval(()=>{
+    if(_pStep<_pSteps.length){
+      const[pct,msg]=_pSteps[_pStep++];
+      document.getElementById('prog-fill').style.width=pct+'%';
+      document.getElementById('prog-pct').textContent=pct+'%';
+      document.getElementById('prog-sub').textContent=msg;
+    }else{
+      const cur=parseInt(document.getElementById('prog-pct').textContent)||95;
+      if(cur<99){
+        document.getElementById('prog-fill').style.width=(cur+1)+'%';
+        document.getElementById('prog-pct').textContent=(cur+1)+'%';
+        document.getElementById('prog-sub').textContent='Server processing…';
+      }
+    }
+  },900);
+}
+function endProg(pct,msg){
+  clearInterval(_pTimer);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-sub').textContent=msg;
+  setTimeout(()=>document.getElementById('prog-overlay').classList.remove('open'),700);
+}
+
+/* ── ERROR / TOAST ── */
+function showErr(msg){const b=document.getElementById('err-box');b.textContent='❌ '+msg;b.style.display='block';b.scrollIntoView({behavior:'smooth'})}
+function hideErr(){document.getElementById('err-box').style.display='none'}
+let _tt=null;
+function toast(msg,type='info'){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;
+  clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3200);
+}
+
+/* ── BUILD FORMDATA ── */
+function buildFormData(){
+  const form=document.getElementById('student-form');
+  const fd=new FormData();
+  ['student_name','father_name','mother_name','date_of_birth','email_id','phone_number',
+   'class_text','session_year','date_of_admission','aadhar_no','school','address'].forEach(n=>{
+    const el=form.querySelector(`[name="${n}"]`);
+    if(el)fd.append(n,el.value);
+  });
+  const gr=form.querySelector('input[name="gender"]:checked');
+  fd.append('gender',gr?gr.value:'');
+  fd.append('mathematics',document.getElementById('math-cb').checked?'Y':'N');
+  fd.append('science',document.getElementById('sci-cb').checked?'Y':'N');
+  const ph=document.getElementById('photo-inp');
+  if(ph.files[0])fd.append('photo',ph.files[0]);
+  return fd;
+}
+
+/* ── SUBMIT ── */
+async function submitForm(mode){
+  hideErr();
+  const admInp=document.getElementById('adm-inp');
+  if(!document.getElementById('adm-auto').checked&&!admInp.value.trim()){
+    showErr('Date of Admission is required, or toggle Auto.');admInp.focus();return;
+  }
+  const srv=document.getElementById('server-url').value.trim().replace(/\/$/,'');
+  if(!srv){showErr('Enter server URL at the top.');return}
+
+  const [btnN,btnF]=[document.getElementById('btn-normal'),document.getElementById('btn-fast')];
+  btnN.disabled=btnF.disabled=true;
+  document.getElementById('result-wrap').style.display='none';
+  document.getElementById('fast-banner').className='fast-banner';
+
+  if(mode==='fast'){
+    // Fast: save JSON immediately, PDF in background
+    btnF.textContent='⚡ Queuing…';
+    const fd=buildFormData();
+    fd.append('mode','fast');
+    try{
+      showProg('Fast Save…');
+      const res=await fetch(`${srv}/generate`,{method:'POST',body:fd});
+      if(res.ok){
+        endProg(100,'✅ Queued!');
+        document.getElementById('fast-banner').className='fast-banner show';
+        toast('⚡ Queued! PDF generating in background.','info');
+      }else{
+        const e=await res.json().catch(()=>({error:'Unknown'}));
+        endProg(0,'Failed');showErr(e.error||'Server error');
+      }
+    }catch(e){endProg(0,'Error');showErr('Network error: '+e.message)}
+    btnN.disabled=btnF.disabled=false;
+    btnF.textContent='⚡ Fast Generate';
+    return;
+  }
+
+  // Normal: blocking with progress + result image
+  btnN.textContent='💾 Generating…';
+  showProg('Generating Form…');
+  const fd=buildFormData();
+  try{
+    const res=await fetch(`${srv}/generate`,{method:'POST',body:fd});
+    if(res.ok){
+      const blob=await res.blob();
+      const url=URL.createObjectURL(blob);
+      endProg(100,'✅ Done!');
+      setTimeout(()=>{
+        document.getElementById('result-img').src=url;
+        document.getElementById('dl-btn').href=url;
+        document.getElementById('result-wrap').style.display='';
+        document.getElementById('result-wrap').scrollIntoView({behavior:'smooth'});
+      },500);
+      toast('✅ Form generated and saved!','success');
+    }else{
+      const e=await res.json().catch(()=>({error:'Unknown'}));
+      endProg(0,'Failed');showErr(e.error||`Server error ${res.status}`);
+    }
+  }catch(e){endProg(0,'Error');showErr('Cannot connect: '+e.message)}
+  btnN.disabled=btnF.disabled=false;
+  btnN.textContent='💾 Generate & Save';
+}
+
+/* ── RESET ── */
+function resetForm(){
+  document.getElementById('student-form').reset();
+  document.getElementById('photo-prev').style.display='none';
+  document.getElementById('photo-lbl').textContent='Click to upload photo';
+  document.getElementById('result-wrap').style.display='none';
+  document.getElementById('fast-banner').className='fast-banner';
+  const admInp=document.getElementById('adm-inp');
+  admInp.disabled=false;admInp.setAttribute('required','');
+  document.getElementById('adm-auto').checked=false;
+  const sesInp=document.getElementById('sess-inp');
+  sesInp.disabled=false;document.getElementById('sess-auto').checked=false;
+  hideErr();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

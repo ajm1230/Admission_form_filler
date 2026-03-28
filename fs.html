@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>File Status</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Unbounded:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d0f0b;--surf:#131510;--card:#1a1d14;--bord:#252820;--am:#e8a030;--am2:#f5c842;--gr:#6fcf6f;--rd:#e05050;--bl:#5ba0e8;--tx:#d8d4c0;--mt:#58594a;--mono:'IBM Plex Mono',monospace;--disp:'Unbounded',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);display:flex;height:100vh}
+.sidebar{width:210px;background:var(--surf);border-right:1px solid var(--bord);display:flex;flex-direction:column;flex-shrink:0;transition:transform .26s ease;z-index:200}
+.sb-logo{padding:18px 14px 14px;border-bottom:1px solid var(--bord)}.sb-logo-name{font-family:var(--disp);font-size:.65rem;font-weight:900;color:var(--am);letter-spacing:1px;line-height:1.4}.sb-logo-sub{font-size:.55rem;color:var(--mt);margin-top:2px}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}.sb-sec{font-size:.55rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;padding:6px 8px 3px}
+.sb-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:6px;text-decoration:none;color:var(--mt);font-size:.74rem;border:1px solid transparent;transition:all .14s;white-space:nowrap}
+.sb-link:hover{color:var(--tx);background:var(--card);border-color:var(--bord)}.sb-link.active{color:var(--am);background:rgba(232,160,48,.09);border-color:rgba(232,160,48,.22)}.sb-link .ico{font-size:.9rem;flex-shrink:0;width:18px;text-align:center}
+.sb-foot{padding:10px 14px;border-top:1px solid var(--bord);font-size:.52rem;color:var(--mt)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:50px;padding:0 14px;border-bottom:1px solid var(--bord);background:var(--surf);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.menu-btn{display:none;background:none;border:none;color:var(--mt);font-size:1.2rem;cursor:pointer;padding:4px 6px;border-radius:5px}.menu-btn:hover{color:var(--tx)}
+.page-title{font-family:var(--disp);font-size:.72rem;font-weight:900;color:var(--am);letter-spacing:.5px;white-space:nowrap}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--mt);transition:background .3s;flex-shrink:0}.live-dot.on{background:var(--gr);animation:ldPulse 1.4s ease-in-out infinite}
+@keyframes ldPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.server-inp{background:var(--card);border:1px solid rgba(232,160,48,.25);border-radius:5px;padding:6px 10px;color:var(--am);font-family:var(--mono);font-size:.68rem;outline:none;width:200px;flex-shrink:0;margin-left:auto}
+/* STATS */
+.stats-bar{display:flex;border-bottom:1px solid var(--bord);background:var(--surf);flex-shrink:0;overflow-x:auto}
+.stat{padding:10px 20px;border-right:1px solid var(--bord);flex-shrink:0}
+.stat-val{font-family:var(--disp);font-size:1.3rem;font-weight:700;line-height:1}.stat-lbl{font-size:.56rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.sv-total{color:var(--tx)}.sv-run{color:var(--am)}.sv-q{color:var(--am2)}.sv-done{color:var(--gr)}.sv-fail{color:var(--rd)}
+.stats-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 14px}
+.last-ref{font-size:.6rem;color:var(--mt)}
+/* CONTROLS */
+.ctrl-bar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--bord);background:var(--bg);flex-wrap:wrap;flex-shrink:0}
+.fb{padding:5px 11px;border-radius:5px;border:1px solid var(--bord);background:var(--card);color:var(--mt);font-size:.68rem;cursor:pointer;font-family:var(--mono);transition:all .13s}.fb:hover{color:var(--tx);border-color:var(--am)}.fb.on{color:var(--bg);background:var(--am);border-color:var(--am)}
+.fb.run.on{background:var(--am);border-color:var(--am)}.fb.q.on{background:var(--am2);border-color:var(--am2)}.fb.done.on{background:var(--gr);border-color:var(--gr)}.fb.fail.on{background:var(--rd);border-color:var(--rd);color:#fff}
+.cb-right{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.actbtn{padding:5px 11px;border-radius:5px;border:1px solid var(--bord);background:var(--card);color:var(--tx);font-size:.68rem;cursor:pointer;font-family:var(--mono);transition:all .13s}.actbtn:hover{border-color:var(--am);color:var(--am)}.actbtn.danger:hover{border-color:var(--rd);color:var(--rd)}
+/* LOG LIST */
+.log-list{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:7px}
+.log-list::-webkit-scrollbar{width:4px}.log-list::-webkit-scrollbar-thumb{background:var(--bord)}
+.log-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:8px;color:var(--mt);font-size:.76rem;text-align:center}
+.lei{font-size:2.2rem;opacity:.18}
+/* JOB CARD */
+.jc{background:var(--card);border:1px solid var(--bord);border-radius:9px;padding:12px 14px;display:flex;flex-direction:column;gap:7px;animation:fadeSlide .22s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.jc.running{border-color:rgba(232,160,48,.3)}.jc.done{border-color:rgba(111,207,111,.22)}.jc.failed{border-color:rgba(224,80,80,.3)}.jc.queued{border-color:rgba(245,200,66,.25)}
+.jc-prog{height:3px;background:var(--bord);border-radius:2px;overflow:hidden;margin-bottom:2px}
+.jcp-fill{height:100%;border-radius:2px;transition:width .35s ease}
+.jc.queued  .jcp-fill{width:5%;background:var(--am2)}
+.jc.running .jcp-fill{animation:shimmer 2s ease-in-out infinite;background:linear-gradient(90deg,var(--am),var(--am2))}
+.jc.done    .jcp-fill{width:100%;background:var(--gr)}
+.jc.failed  .jcp-fill{width:100%;background:var(--rd)}
+@keyframes shimmer{0%{width:8%}50%{width:82%}100%{width:8%}}
+.jc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.jbadge{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.jb-q{background:rgba(245,200,66,.12);color:var(--am2)}.jb-run{background:rgba(232,160,48,.12);color:var(--am);animation:blink 1.2s ease-in-out infinite}.jb-done{background:rgba(111,207,111,.1);color:var(--gr)}.jb-fail{background:rgba(224,80,80,.12);color:var(--rd)}
+@keyframes blink{0%,100%{opacity:.55}50%{opacity:1}}
+.jname{font-weight:500;font-size:.82rem;color:var(--tx);flex:1}.jfolder{font-size:.66rem;color:var(--mt)}.jmode{font-size:.6rem;padding:1px 6px;border-radius:20px;border:1px solid var(--bord);color:var(--mt);flex-shrink:0}
+.jdur{font-size:.64rem;color:var(--mt)}
+.jtimes{display:flex;gap:14px;flex-wrap:wrap}
+.jt{display:flex;gap:4px;align-items:center;font-size:.64rem}.jt-lbl{color:var(--mt)}.jt-val{color:var(--tx)}
+.jerr{background:rgba(224,80,80,.06);border:1px solid rgba(224,80,80,.18);border-radius:5px;padding:7px 10px;font-size:.68rem;color:var(--rd);word-break:break-all;line-height:1.6}
+.jerr::before{content:'⚠ ';font-weight:700}
+.jacts{display:flex;gap:6px;margin-top:1px}
+.jbtn{padding:3px 10px;border-radius:4px;border:1px solid var(--bord);background:var(--surf);color:var(--tx);font-size:.66rem;cursor:pointer;font-family:var(--mono);transition:all .12s}
+.jbtn:hover{border-color:var(--am);color:var(--am)}.jbtn.retry:hover{border-color:var(--am2);color:var(--am2)}.jbtn.dis:hover{border-color:var(--mt);color:var(--mt)}
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:9px 14px;font-size:.72rem;z-index:9999;transform:translateY(50px);opacity:0;transition:all .26s cubic-bezier(.34,1.56,.64,1);max-width:260px}
+.toast.show{transform:translateY(0);opacity:1}.toast.success{border-color:var(--gr);color:var(--gr)}.toast.error{border-color:var(--rd);color:var(--rd)}.toast.info{border-color:var(--am);color:var(--am)}
+.sb-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:190}
+@media(max-width:700px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);box-shadow:3px 0 24px rgba(0,0,0,.5)}.sidebar.open{transform:translateX(0)}.sb-back.open{display:block}.menu-btn{display:block}
+  .server-inp{width:140px}.stats-bar{flex-wrap:wrap}.stat{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+<div class="sb-back" id="sb-back" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo"><div class="sb-logo-name">EDU<br/>RECORDS</div><div class="sb-logo-sub">Student Management System</div></div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Pages</div>
+    <a href="fg.html" class="sb-link"><span class="ico">📝</span>Form Generator</a>
+    <a href="fv.html" class="sb-link"><span class="ico">🗂️</span>Files Viewer</a>
+    <a href="fd.html" class="sb-link"><span class="ico">⬇️</span>Form Download</a>
+    <a href="fs.html" class="sb-link active"><span class="ico">⚙️</span>File Status</a>
+  </nav>
+  <div class="sb-foot">v2.0 · File Status</div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="page-title">⚙️ FILE STATUS</div>
+    <div class="live-dot" id="ldot" title="Connection"></div>
+    <span id="last-ref" class="last-ref" style="font-size:.62rem;color:var(--mt)"></span>
+    <input class="server-inp" type="text" id="server-url" value="https://abc87.pythonanywhere.com" placeholder="Server URL"/>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val sv-total" id="sv-tot">—</div><div class="stat-lbl">Total</div></div>
+    <div class="stat"><div class="stat-val sv-run"   id="sv-run">—</div><div class="stat-lbl">Running</div></div>
+    <div class="stat"><div class="stat-val sv-q"     id="sv-q">—</div><div class="stat-lbl">Queued</div></div>
+    <div class="stat"><div class="stat-val sv-done"  id="sv-done">—</div><div class="stat-lbl">Done</div></div>
+    <div class="stat"><div class="stat-val sv-fail"  id="sv-fail">—</div><div class="stat-lbl">Failed</div></div>
+    <div class="stats-right"></div>
+  </div>
+  <div class="ctrl-bar">
+    <button class="fb on" data-f="all"     onclick="setF('all',this)">All</button>
+    <button class="fb run" data-f="running" onclick="setF('running',this)">⟳ Running</button>
+    <button class="fb q"   data-f="queued"  onclick="setF('queued',this)">◷ Queued</button>
+    <button class="fb done" data-f="done"   onclick="setF('done',this)">✓ Done</button>
+    <button class="fb fail" data-f="failed" onclick="setF('failed',this)">✕ Failed</button>
+    <div class="cb-right">
+      <button class="actbtn" onclick="retryAll()">🔄 Retry All Failed</button>
+      <button class="actbtn danger" onclick="clearDone()">🗑 Clear Done</button>
+      <button class="actbtn" onclick="fetchJobs()">↺ Refresh</button>
+    </div>
+  </div>
+  <div class="log-list" id="log-list"><div class="log-empty"><div class="lei">🗂</div><span>Loading jobs…</span></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-back').classList.toggle('open')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-back').classList.remove('open')}
+function srv(){return document.getElementById('server-url').value.trim().replace(/\/$/,'')}
+let _tt=null;function toast(msg,t='info'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+t;clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',3200)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+let _jobs={},_filter='all',_pollTimer=null;
+
+function srv(){return document.getElementById('server-url').value.trim().replace(/\/$/,'')}
+
+async function fetchJobs(){
+  const dot=document.getElementById('ldot');
+  try{
+    const res=await fetch(`${srv()}/gen-status`);if(!res.ok)throw new Error();
+    _jobs=await res.json();dot.className='live-dot on';
+    document.getElementById('last-ref').textContent='updated '+new Date().toLocaleTimeString();
+    render();
+    const active=Object.values(_jobs).filter(j=>j.status==='running'||j.status==='queued');
+    if(!active.length&&_pollTimer){clearInterval(_pollTimer);_pollTimer=null}
+    else if(active.length&&!_pollTimer)_pollTimer=setInterval(fetchJobs,2500);
+  }catch(e){dot.className='live-dot';document.getElementById('log-list').innerHTML='<div class="log-empty"><div class="lei">⚠</div><span>Cannot reach server.<br/>Check URL.</span></div>'}
+}
+
+function render(){
+  const all=Object.values(_jobs);
+  const order={running:0,queued:1,failed:2,done:3};
+  let entries=all.sort((a,b)=>order[a.status]-order[b.status]||(b.queued_at||'').localeCompare(a.queued_at||''));
+  if(_filter!=='all')entries=entries.filter(j=>j.status===_filter);
+  // stats
+  $('sv-tot').textContent=all.length;$('sv-run').textContent=all.filter(j=>j.status==='running').length;
+  $('sv-q').textContent=all.filter(j=>j.status==='queued').length;$('sv-done').textContent=all.filter(j=>j.status==='done').length;
+  $('sv-fail').textContent=all.filter(j=>j.status==='failed').length;
+  const ll=document.getElementById('log-list');
+  if(!entries.length){ll.innerHTML=`<div class="log-empty"><div class="lei">${_filter==='all'?'📭':'🔍'}</div><span>${_filter==='all'?'No jobs yet.':'No '+_filter+' jobs.'}</span></div>`;return}
+  ll.innerHTML=entries.map(j=>card(j)).join('');
+}
+
+function $(id){return document.getElementById(id)}
+
+function card(j){
+  const dur=calcDur(j);
+  return`<div class="jc ${j.status}">
+    <div class="jc-prog"><div class="jcp-fill"></div></div>
+    <div class="jc-top">
+      <span class="jbadge jb-${j.status.slice(0,3)==='run'?'run':j.status.slice(0,3)==='que'?'q':j.status.slice(0,3)==='don'?'done':'fail'}">${slbl(j.status)}</span>
+      <span class="jname">👤 ${esc(j.student_name||j.folder)}</span>
+      <span class="jfolder">${esc(j.folder)}</span>
+      <span class="jmode">${j.mode||'normal'}</span>
+      ${dur?`<span class="jdur">${dur}</span>`:''}
+    </div>
+    <div class="jtimes">
+      ${j.queued_at?`<div class="jt"><span class="jt-lbl">queued</span><span class="jt-val">${ft(j.queued_at)}</span></div>`:''}
+      ${j.started_at?`<div class="jt"><span class="jt-lbl">started</span><span class="jt-val">${ft(j.started_at)}</span></div>`:''}
+      ${j.finished_at?`<div class="jt"><span class="jt-lbl">finished</span><span class="jt-val">${ft(j.finished_at)}</span></div>`:''}
+    </div>
+    ${j.error?`<div class="jerr">${esc(j.error)}</div>`:''}
+    <div class="jacts">
+      ${j.status==='failed'?`<button class="jbtn retry" onclick="retryJob('${j.job_id}')">🔄 Retry</button>`:''}
+      ${j.status==='done'?`<button class="jbtn dis" onclick="dismiss('${j.job_id}')">✕ Dismiss</button>`:''}
+      <button class="jbtn" onclick="copyId('${j.job_id}')">📋 ID</button>
+    </div>
+  </div>`;
+}
+
+function slbl(s){return{queued:'◷ Queued',running:'⟳ Running',done:'✓ Done',failed:'✕ Failed'}[s]||s}
+function ft(iso){if(!iso)return'';try{return new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(_){return iso}}
+function calcDur(j){
+  const s=j.started_at?new Date(j.started_at).getTime():null;
+  const e=j.finished_at?new Date(j.finished_at).getTime():(j.status==='running'?Date.now():null);
+  if(!s||!e)return'';const sec=Math.round((e-s)/1000);return sec<60?`${sec}s`:`${Math.floor(sec/60)}m${sec%60}s`;
+}
+
+function setF(f,btn){
+  _filter=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');render();
+}
+
+async function retryJob(id){
+  try{const res=await fetch(`${srv()}/gen-retry`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:id})});const r=await res.json();r.success?toast('🔄 Retrying…','info'):toast('❌ '+(r.error||''),'error');fetchJobs()}
+  catch(e){toast('❌ '+e.message,'error')}
+}
+async function retryAll(){
+  const failed=Object.values(_jobs).filter(j=>j.status==='failed');
+  if(!failed.length){toast('No failed jobs.','info');return}
+  for(const j of failed)await retryJob(j.job_id);
+}
+async function clearDone(){
+  try{const res=await fetch(`${srv()}/gen-clear-done`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const r=await res.json();if(r.success){toast('🗑 Done jobs cleared.','success');fetchJobs()}else toast('❌ '+(r.error||''),'error')}
+  catch(_){Object.keys(_jobs).forEach(k=>{if(_jobs[k].status==='done')delete _jobs[k]});render();toast('Done hidden locally.')}
+}
+function dismiss(id){delete _jobs[id];render()}
+function copyId(id){navigator.clipboard?.writeText(id).then(()=>toast('📋 Copied!'),()=>toast('Cannot copy.','error'))}
+
+document.getElementById('server-url').addEventListener('change',()=>{if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null}fetchJobs()});
+fetchJobs();
+_pollTimer=setInterval(fetchJobs,2500);
+</script>
+</body>
+</html>

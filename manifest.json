@@ -1,0 +1,20 @@
+{
+  "name": "Eklavya Management",
+  "short_name": "Eklavya",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#ffcc00",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/TqR9C1zy/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.ibb.co/TqR9C1zy/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

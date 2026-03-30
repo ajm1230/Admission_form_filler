@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Download Certificates — Nucleus Public School</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--navy:#0f2044;--blue:#1a56db;--blue-light:#3b82f6;--blue-pale:#eff6ff;--gold:#b8860b;--gold-light:#f5c842;--green:#10b981;--red:#ef4444;--sidebar-w:230px;--radius:10px;--shadow:0 4px 24px rgba(15,32,68,0.10)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Lato',sans-serif;background:#f0f4fb;color:#1e2a3a;min-height:100vh;display:flex}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--navy);min-height:100vh;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;box-shadow:4px 0 24px rgba(15,32,68,0.18);transition:transform 0.3s ease}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo h1{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);letter-spacing:1.5px;text-transform:uppercase;line-height:1.5}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px}
+.sidebar-nav{flex:1;padding:14px 0}
+.nav-section{padding:10px 20px 4px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,0.65);font-size:13.5px;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,0.08);color:#fff;border-left-color:var(--blue-light)}
+.nav-item .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.sidebar-bottom{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.server-badge{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:6px}
+.server-dot{width:7px;height:7px;border-radius:50%;background:#6b7280;flex-shrink:0}
+.server-dot.online{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,0.6)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150}
+.sidebar-overlay.active{display:block}
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #e5eaf2;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+.menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--navy);padding:4px;flex-shrink:0}
+.topbar h2{font-family:'Cinzel',serif;font-size:15px;color:var(--navy);flex:1}
+.topbar-actions{display:flex;gap:8px}
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.18s;font-family:'Lato',sans-serif;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1648c8}
+.btn-secondary{background:#f0f4fb;color:var(--navy);border:1px solid #d1dae8}.btn-secondary:hover{background:#e2ebf8}
+.btn-gold{background:linear-gradient(135deg,#b8860b,#f5c842);color:#fff;box-shadow:0 2px 12px rgba(184,134,11,0.3)}.btn-gold:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 2px 10px rgba(16,185,129,0.3)}.btn-green:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+/* LAYOUT */
+.page-content{padding:24px;flex:1;max-width:860px;width:100%;margin:0 auto}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card-title{font-family:'Cinzel',serif;font-size:13px;color:var(--navy);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #e5eaf2;display:flex;align-items:center;gap:8px}
+/* CLASS SELECTOR */
+.class-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:6px}
+.class-btn{padding:14px 8px;border-radius:10px;border:2px solid #d1dae8;background:#fff;cursor:pointer;font-size:15px;font-weight:700;color:#4a6280;text-align:center;transition:all 0.18s;font-family:'Lato',sans-serif;position:relative}
+.class-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
+.class-btn.selected{border-color:var(--blue);background:var(--blue);color:#fff;box-shadow:0 2px 12px rgba(26,86,219,0.3)}
+.class-btn .cls-count{display:block;font-size:10px;font-weight:400;margin-top:2px;opacity:0.7}
+.class-btn.all-btn{background:linear-gradient(135deg,var(--navy),var(--blue));border-color:var(--navy);color:#fff}
+.class-btn.all-btn.selected{box-shadow:0 2px 16px rgba(15,32,68,0.35)}
+/* ACTION CARDS */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.action-card{border:2px solid #e5eaf2;border-radius:12px;padding:22px 20px;cursor:pointer;transition:all 0.2s;background:#fff;text-align:center}
+.action-card:hover{border-color:var(--blue);box-shadow:0 4px 20px rgba(26,86,219,0.12);transform:translateY(-2px)}
+.action-card.pdf-card:hover{border-color:var(--red)}
+.action-card.zip-card:hover{border-color:var(--green)}
+.action-icon{font-size:36px;margin-bottom:10px}
+.action-title{font-family:'Cinzel',serif;font-size:14px;color:var(--navy);margin-bottom:6px}
+.action-desc{font-size:12px;color:#6b8ab0;line-height:1.5;margin-bottom:16px}
+/* PROGRESS */
+.progress-section{display:none;margin-top:16px}
+.progress-section.show{display:block}
+.progress-bar-wrap{background:#e5eaf2;border-radius:10px;height:8px;overflow:hidden;margin:8px 0}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-light));border-radius:10px;transition:width 0.3s ease;width:0%}
+.progress-meta{font-size:12px;color:#4a6280;display:flex;justify-content:space-between}
+/* STATS */
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.stat-chip{background:var(--blue-pale);border:1px solid #d1dae8;border-radius:8px;padding:8px 14px;font-size:12px;color:#4a6280;display:flex;align-items:center;gap:6px}
+.stat-chip strong{color:var(--navy);font-size:14px}
+/* ALERT */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.alert-success{background:#d1fae5;color:#065f46;border-left:4px solid var(--green)}
+.alert-error{background:#fee2e2;color:#991b1b;border-left:4px solid var(--red)}
+.alert-info{background:#dbeafe;color:#1e40af;border-left:4px solid var(--blue)}
+/* LOG */
+.log-box{max-height:160px;overflow-y:auto;background:#f8faff;border-radius:8px;border:1px solid #e5eaf2;padding:10px;margin-top:12px;font-size:12px;color:#4a6280;display:none}
+.log-box.show{display:block}
+.log-line{padding:3px 0;border-bottom:1px solid #f0f4fb}
+.log-line:last-child{border:none}
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;flex-shrink:0}
+.spinner-dark{width:16px;height:16px;border:2px solid rgba(26,86,219,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
+/* TOAST */
+#toast-container{position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast{background:#1e2a3a;color:#fff;padding:13px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,0.25);display:flex;align-items:center;gap:10px;pointer-events:auto;animation:slideUp 0.3s ease;min-width:240px}
+.toast.success{border-left:4px solid var(--green)}.toast.error{border-left:4px solid var(--red)}.toast.info{border-left:4px solid var(--blue-light)}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* RESPONSIVE */
+@media(max-width:720px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.menu-btn{display:flex}
+  .page-content{padding:14px}
+  .class-grid{grid-template-columns:repeat(3,1fr)}
+  .action-grid{grid-template-columns:1fr}
+  .topbar{padding:0 14px}
+}
+@media(max-width:400px){.class-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><h1>Nucleus Public School</h1><p>Certificate Generator</p></div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Generate</div>
+    <a class="nav-item" href="index.html"><span class="icon">🎓</span> Generate</a>
+    <div class="nav-section">Manage</div>
+    <a class="nav-item" href="file-explorer.html"><span class="icon">📁</span> File Explorer</a>
+    <a class="nav-item" href="status.html"><span class="icon">⚡</span> Job Status</a>
+    <div class="nav-section">Download</div>
+    <a class="nav-item active" href="download-cer.html"><span class="icon">⬇️</span> Download</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="server-badge">
+      <div class="server-dot" id="server-dot"></div>
+      <span id="server-status-text">Checking…</span>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="openSidebar()">☰</button>
+    <h2>Download Certificates</h2>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn btn-secondary btn-sm">🎓 Generate</a>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Stats row -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-chip"><div class="spinner-dark"></div> Loading…</div>
+    </div>
+
+    <!-- Step 1: Class selector -->
+    <div class="card">
+      <div class="card-title">📚 Step 1 — Select Class</div>
+      <div class="class-grid" id="class-grid">
+        <!-- populated by JS -->
+      </div>
+      <div style="font-size:12px;color:#8aa0be;margin-top:10px;" id="selection-label">No class selected</div>
+    </div>
+
+    <!-- Step 2: Actions -->
+    <div class="card" id="action-card" style="display:none;">
+      <div class="card-title">⬇️ Step 2 — Choose Download Type</div>
+
+      <div class="action-grid">
+        <!-- PDF -->
+        <div class="action-card pdf-card">
+          <div class="action-icon">📄</div>
+          <div class="action-title">Generate PDF</div>
+          <div class="action-desc">Collects all certificates for the selected class and places 2 per A4 page with an 8px gap.</div>
+          <button class="btn btn-primary" id="btn-pdf" onclick="startPDF()" style="width:100%;justify-content:center;">
+            📄 Generate PDF
+          </button>
+        </div>
+        <!-- ZIP -->
+        <div class="action-card zip-card">
+          <div class="action-icon">🗜️</div>
+          <div class="action-title">Generate ZIP</div>
+          <div class="action-desc">Collects all PNG certificates for the selected class and packages them into a single ZIP file.</div>
+          <button class="btn btn-green" id="btn-zip" onclick="startZIP()" style="width:100%;justify-content:center;">
+            🗜️ Generate ZIP
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section" id="progress-section">
+        <div class="progress-meta">
+          <span id="prog-label">Working…</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+        <div style="font-size:12px;color:#8aa0be;margin-top:4px;" id="prog-sub"></div>
+      </div>
+
+      <!-- Log -->
+      <div class="log-box" id="log-box"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const SERVER = 'https://Abc12302.pythonanywhere.com';
+
+let allStudents  = [];   // full list from /list_students
+let classCounts  = {};   // { '5': 12, '6': 30, … }
+let selectedClass = null; // '5'…'9' or 'all'
+
+// ── Boot ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  checkServer();
+  await loadStudents();
+});
+
+async function loadStudents() {
+  try {
+    const r = await fetch(SERVER + '/list_students');
+    const d = await r.json();
+    allStudents = d.students || [];
+
+    // Count per class
+    classCounts = {};
+    for (const s of allStudents) {
+      const c = String(s.class);
+      classCounts[c] = (classCounts[c] || 0) + 1;
+    }
+
+    renderStats();
+    renderClassGrid();
+  } catch (e) {
+    document.getElementById('stats-row').innerHTML =
+      `<div class="alert alert-error" style="margin:0"><span>❌</span><div>Could not reach server: ${e.message}</div></div>`;
+    showToast('Server unreachable', 'error');
+  }
+}
+
+function renderStats() {
+  const total = allStudents.length;
+  const classes = Object.keys(classCounts).sort((a,b)=>parseInt(a)-parseInt(b));
+  let html = `<div class="stat-chip">Total <strong>${total}</strong> certificates</div>`;
+  for (const c of classes) {
+    html += `<div class="stat-chip">Class ${c}: <strong>${classCounts[c]}</strong></div>`;
+  }
+  document.getElementById('stats-row').innerHTML = html;
+}
+
+function renderClassGrid() {
+  const classes = Object.keys(classCounts).sort((a,b)=>parseInt(a)-parseInt(b));
+  const grid = document.getElementById('class-grid');
+
+  let html = '';
+  // Class buttons 
+  for (const c of classes) {
+    html += `<button class="class-btn" data-class="${c}" onclick="selectClass('${c}')">
+      Class ${c}<span class="cls-count">${classCounts[c]} cert${classCounts[c]!==1?'s':''}</span>
+    </button>`;
+  }
+  // All button
+  const total = allStudents.length;
+  html += `<button class="class-btn all-btn" data-class="all" onclick="selectClass('all')">
+    All<span class="cls-count">${total} certs</span>
+  </button>`;
+
+  grid.innerHTML = html;
+}
+
+function selectClass(cls) {
+  selectedClass = cls;
+  // Update button styles
+  document.querySelectorAll('.class-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.class === cls);
+  });
+  // Update label
+  const count = cls === 'all' ? allStudents.length : (classCounts[cls] || 0);
+  const label = cls === 'all' ? `All classes — ${count} certificates` : `Class ${cls} — ${count} certificates`;
+  document.getElementById('selection-label').textContent = label;
+  // Show action card
+  document.getElementById('action-card').style.display = 'block';
+  document.getElementById('action-card').scrollIntoView({behavior:'smooth', block:'nearest'});
+  resetProgress();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function getStudentsForSelection() {
+  if (selectedClass === 'all') return allStudents;
+  return allStudents.filter(s => String(s.class) === String(selectedClass));
+}
+
+function fileName(type) {
+  // e.g. "Class_8_Certificates.pdf" or "All_Certificates.zip"
+  const cls = selectedClass === 'all' ? 'All' : `Class_${selectedClass}`;
+  return `${cls}_Certificates.${type}`;
+}
+
+function setProgress(pct, label, sub='') {
+  document.getElementById('progress-section').classList.add('show');
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+  document.getElementById('prog-sub').textContent = sub;
+}
+
+function resetProgress() {
+  document.getElementById('progress-section').classList.remove('show');
+  document.getElementById('log-box').classList.remove('show');
+  document.getElementById('log-box').innerHTML = '';
+  document.getElementById('prog-bar').style.width = '0%';
+}
+
+function logLine(msg) {
+  const box = document.getElementById('log-box');
+  box.classList.add('show');
+  const d = document.createElement('div');
+  d.className = 'log-line';
+  d.textContent = msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function disableButtons(state) {
+  document.getElementById('btn-pdf').disabled = state;
+  document.getElementById('btn-zip').disabled = state;
+}
+
+// ── Generate PDF ──────────────────────────────────────────────
+async function startPDF() {
+  if (!selectedClass) return showToast('Select a class first', 'error');
+  const students = getStudentsForSelection();
+  if (!students.length) return showToast('No certificates found for this class', 'error');
+
+  disableButtons(true);
+  document.getElementById('btn-pdf').innerHTML = '<div class="spinner"></div> Building PDF…';
+  resetProgress();
+  setProgress(5, 'Initialising PDF…');
+  logLine(`Starting PDF for ${students.length} certificates…`);
+
+  try {
+    const { jsPDF } = window.jspdf;
+
+    // A4 portrait in mm: 210 x 297
+    // 2 certificates per page stacked vertically with 8px gap (≈ 2.83mm)
+    const PAGE_W   = 210;
+    const PAGE_H   = 297;
+    const GAP_MM   = 2.83; // 8px ≈ 2.83mm at 96dpi
+
+    // Each cert fits half the page height minus half the gap
+    const CERT_H   = (PAGE_H - GAP_MM) / 2;
+    const CERT_W   = PAGE_W;
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    let pageNum = 0;
+
+    for (let i = 0; i < students.length; i += 2) {
+      if (pageNum > 0) pdf.addPage();
+      pageNum++;
+
+      const pair = students.slice(i, i + 2);
+      const pct  = Math.round(((i + pair.length) / students.length) * 90) + 5;
+      setProgress(pct, `Page ${pageNum} — ${pair[0].studentName}…`, `${i + pair.length} / ${students.length}`);
+
+      for (let j = 0; j < pair.length; j++) {
+        const s   = pair[j];
+        const yMM = j === 0 ? 0 : CERT_H + GAP_MM;
+
+        logLine(`  [${i+j+1}/${students.length}] ${s.studentName}`);
+
+        try {
+          // Build imageUrl from folderName + filename (imageUrl may be missing in older records)
+          const imgPath = s.imageUrl || `/students/class-${s.class}/${s.folderName}/${s.filename}`;
+          const imgUrl  = SERVER + imgPath + '?t=' + Date.now();
+          const imgData = await fetchImageAsBase64(imgUrl);
+          pdf.addImage(imgData, 'PNG', 0, yMM, CERT_W, CERT_H, undefined, 'FAST');
+        } catch (e) {
+          logLine(`    ⚠ Image failed: ${e.message} — skipping`);
+          // Draw placeholder
+          pdf.setFillColor(240, 244, 251);
+          pdf.rect(0, yMM, CERT_W, CERT_H, 'F');
+          pdf.setFontSize(10);
+          pdf.setTextColor(100);
+          pdf.text(`[Image unavailable: ${s.studentName}]`, CERT_W / 2, yMM + CERT_H / 2, { align: 'center' });
+        }
+      }
+    }
+
+    setProgress(100, 'Saving PDF…');
+    pdf.save(fileName('pdf'));
+    logLine(`✅ PDF saved: ${fileName('pdf')}`);
+    showToast('✅ PDF downloaded!', 'success');
+
+  } catch (e) {
+    showToast('❌ PDF failed: ' + e.message, 'error');
+    logLine('❌ Error: ' + e.message);
+    console.error(e);
+  }
+
+  disableButtons(false);
+  document.getElementById('btn-pdf').innerHTML = '📄 Generate PDF';
+  setProgress(100, 'Done');
+}
+
+async function fetchImageAsBase64(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const blob   = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('FileReader failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ── Generate ZIP ──────────────────────────────────────────────
+async function startZIP() {
+  if (!selectedClass) return showToast('Select a class first', 'error');
+
+  disableButtons(true);
+  document.getElementById('btn-zip').innerHTML = '<div class="spinner"></div> Building ZIP…';
+  resetProgress();
+  setProgress(10, 'Requesting ZIP from server…');
+  logLine(`Requesting ZIP for class: ${selectedClass === 'all' ? 'All' : selectedClass}…`);
+
+  try {
+    let url;
+    if (selectedClass === 'all') {
+      url = `${SERVER}/download_all?type=img`;
+    } else {
+      url = `${SERVER}/download_class?class=${selectedClass}`;
+    }
+
+    setProgress(30, 'Downloading from server…');
+    const res = await fetch(url);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || 'Server error ' + res.status);
+    }
+
+    setProgress(70, 'Saving ZIP…');
+    const blob = await res.blob();
+
+    // Trigger download
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName('zip');
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    setProgress(100, 'Done!');
+    logLine(`✅ ZIP saved: ${fileName('zip')}`);
+    showToast('✅ ZIP downloaded!', 'success');
+
+  } catch (e) {
+    showToast('❌ ZIP failed: ' + e.message, 'error');
+    logLine('❌ Error: ' + e.message);
+    console.error(e);
+  }
+
+  disableButtons(false);
+  document.getElementById('btn-zip').innerHTML = '🗜️ Generate ZIP';
+}
+
+// ── Server Check ──────────────────────────────────────────────
+async function checkServer() {
+  try {
+    const r = await fetch(SERVER + '/health', { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      document.getElementById('server-dot').classList.add('online');
+      document.getElementById('server-status-text').textContent = 'Server online';
+    } else throw new Error();
+  } catch {
+    document.getElementById('server-status-text').textContent = 'Server offline';
+  }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('active') }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active') }
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>

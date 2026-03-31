@@ -1,0 +1,14 @@
+{
+  "class": "Nursery",
+  "students": [
+    { "name": "Niyati Anand", "rank": "2" },
+    { "name": "Nyasa Nayan", "rank": "8" },
+    { "name": "Sourabh Roy", "rank": "3" },
+    { "name": "Kumar Ritik", "rank": "7" },
+    { "name": "Satyam Kumar", "rank": "1" },
+    { "name": "Sarthak Kumar", "rank": "6" },
+    { "name": "Harsh", "rank": "9" },
+    { "name": "Priyanshi", "rank": "4" },
+    { "name": "Kavya Kumari", "rank": "5" }
+  ]
+}

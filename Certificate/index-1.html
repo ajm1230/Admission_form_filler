@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Certificate Generator — Nucleus Public School</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--navy:#0f2044;--blue:#1a56db;--blue-light:#3b82f6;--blue-pale:#eff6ff;--gold:#b8860b;--gold-light:#f5c842;--green:#10b981;--red:#ef4444;--sidebar-w:230px;--radius:10px;--shadow:0 4px 24px rgba(15,32,68,0.10)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:'Lato',sans-serif;background:#f0f4fb;color:#1e2a3a;min-height:100vh;display:flex}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--navy);min-height:100vh;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;box-shadow:4px 0 24px rgba(15,32,68,0.18);transition:transform 0.3s ease}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.sidebar-logo h1{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);letter-spacing:1.5px;text-transform:uppercase;line-height:1.5}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px}
+.sidebar-nav{flex:1;padding:14px 0}
+.nav-section{padding:10px 20px 4px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:rgba(255,255,255,0.65);font-size:13.5px;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;text-decoration:none}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,0.08);color:#fff;border-left-color:var(--blue-light)}
+.nav-item .icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.sidebar-bottom{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.server-badge{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:6px}
+.server-dot{width:7px;height:7px;border-radius:50%;background:#6b7280;flex-shrink:0}
+.server-dot.online{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,0.6)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:150}
+.sidebar-overlay.active{display:block}
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #e5eaf2;box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+.menu-btn{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--navy);padding:4px;flex-shrink:0}
+.topbar h2{font-family:'Cinzel',serif;font-size:15px;color:var(--navy);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{display:flex;gap:8px}
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.18s;font-family:'Lato',sans-serif;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1648c8}
+.btn-secondary{background:#f0f4fb;color:var(--navy);border:1px solid #d1dae8}.btn-secondary:hover{background:#e2ebf8}
+.btn-gold{background:linear-gradient(135deg,#b8860b,#f5c842);color:#fff;box-shadow:0 2px 12px rgba(184,134,11,0.3)}.btn-gold:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+/* LAYOUT */
+.page-content{padding:24px;flex:1;max-width:980px;width:100%;margin:0 auto}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card-title{font-family:'Cinzel',serif;font-size:13px;color:var(--navy);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #e5eaf2;display:flex;align-items:center;gap:8px}
+/* TABS */
+.mode-tabs{display:flex;gap:0;background:#f0f4fb;border-radius:10px;padding:4px;margin-bottom:22px;width:100%}
+.mode-tab{flex:1;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:#5a7099;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+.mode-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(26,86,219,0.25)}
+/* SOURCE TABS (PDF / JSON) */
+.src-tabs{display:flex;gap:8px;margin-bottom:18px}
+.src-tab{flex:1;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;border:2px solid #e5eaf2;color:#5a7099;background:#fff;transition:all 0.2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Lato',sans-serif}
+.src-tab.active{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:11px;font-weight:700;color:#4a6280;text-transform:uppercase;letter-spacing:0.5px}
+input,select{padding:11px 14px;border:1.5px solid #d1dae8;border-radius:8px;font-size:14px;font-family:'Lato',sans-serif;color:var(--navy);background:#fff;transition:border-color 0.2s,box-shadow 0.2s;outline:none;width:100%;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,0.1)}
+/* AUTO CHIPS */
+.auto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.auto-chip{background:var(--blue-pale);border:1px solid #d1dae8;border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px}
+.auto-chip .chip-label{font-size:10px;font-weight:700;color:#4a6280;text-transform:uppercase;letter-spacing:0.5px}
+.auto-chip .chip-value{font-size:15px;font-weight:700;color:var(--navy)}
+.auto-chip.grade .chip-value{color:var(--blue)}
+.auto-chip.promoted .chip-value{color:var(--green)}
+.auto-chip.remark .chip-value{font-size:11px;color:var(--gold)}
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed #b8c9e8;border-radius:var(--radius);padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--blue-pale)}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--blue);background:#dbeafe}
+.upload-zone .uz-icon{font-size:36px;margin-bottom:8px}
+.upload-zone h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.upload-zone p{font-size:12px;color:#6b8ab0;line-height:1.5}
+.upload-zone input{display:none}
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{background:var(--blue-pale);padding:9px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#4a6280;text-align:left;border-bottom:2px solid #d1dae8}
+.data-table td{padding:9px 12px;border-bottom:1px solid #f0f4fb;color:#2d3e54}
+.data-table tr:hover td{background:#f8faff}
+.scroll-area{overflow-x:auto;max-height:300px;overflow-y:auto;border-radius:8px;border:1px solid #e5eaf2}
+.scroll-area::-webkit-scrollbar{width:5px;height:5px}
+.scroll-area::-webkit-scrollbar-thumb{background:#c5d2e8;border-radius:3px}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.pill-blue{background:#dbeafe;color:#1e40af}
+.pill-green{background:#d1fae5;color:#065f46}
+/* PROGRESS */
+.progress-section{display:none;margin-top:16px}
+.progress-section.show{display:block}
+.progress-bar-wrap{background:#e5eaf2;border-radius:10px;height:8px;overflow:hidden;margin:8px 0}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-light));border-radius:10px;transition:width 0.4s ease;width:0%}
+.progress-meta{font-size:12px;color:#4a6280;display:flex;justify-content:space-between}
+/* ALERT */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.alert-success{background:#d1fae5;color:#065f46;border-left:4px solid var(--green)}
+.alert-info{background:#dbeafe;color:#1e40af;border-left:4px solid var(--blue)}
+/* ACTIONS */
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.actions-row .btn{flex:1;min-width:120px;justify-content:center}
+/* RESULT */
+.download-section{display:none}.download-section.show{display:block}
+.cert-result{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 0}
+.cert-result img{max-width:100%;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.cert-name{font-family:'Cinzel',serif;font-size:16px;color:var(--navy);text-align:center}
+.cert-meta{font-size:12px;color:#6b8ab0;text-align:center}
+/* BATCH LOG */
+.batch-log{max-height:180px;overflow-y:auto;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.log-row{display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 10px;background:#f8faff;border-radius:6px}
+.log-row.ok{border-left:3px solid var(--green)}
+.log-row.fail{border-left:3px solid var(--red)}
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;flex-shrink:0}
+.spinner-sm{width:18px;height:18px;border:2px solid rgba(26,86,219,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
+/* TOAST */
+#toast-container{position:fixed;bottom:20px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast{background:#1e2a3a;color:#fff;padding:13px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,0.25);display:flex;align-items:center;gap:10px;pointer-events:auto;animation:slideUp 0.3s ease;min-width:240px}
+.toast.success{border-left:4px solid var(--green)}.toast.error{border-left:4px solid var(--red)}.toast.info{border-left:4px solid var(--blue-light)}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* RESPONSIVE */
+@media(max-width:720px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.menu-btn{display:flex}
+  .page-content{padding:14px}.form-grid{grid-template-columns:1fr}
+  .auto-grid{grid-template-columns:1fr 1fr}.topbar{padding:0 14px}
+  .topbar h2{font-size:13px}.mode-tab{font-size:12px;padding:9px 10px}
+  .src-tab{font-size:11px;padding:8px 10px}
+}
+@media(max-width:400px){.auto-grid{grid-template-columns:1fr}.actions-row .btn{min-width:0}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo"><h1>Nucleus Public School</h1><p>Certificate Generator</p></div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Generate</div>
+    <div class="nav-item active" onclick="closeSidebar()"><span class="icon">🎓</span> Generate</div>
+    <div class="nav-section">Manage</div>
+    <a class="nav-item" href="file-explorer.html"><span class="icon">📁</span> File Explorer</a>
+    <a class="nav-item" href="status.html"><span class="icon">⚡</span> Job Status</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="server-badge">
+      <div class="server-dot" id="server-dot"></div>
+      <span id="server-status-text">Checking…</span>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="openSidebar()">☰</button>
+    <h2>Certificate Generator</h2>
+    <div class="topbar-actions">
+      <a href="file-explorer.html" class="btn btn-secondary btn-sm">📁 Files</a>
+      <a href="status.html" class="btn btn-secondary btn-sm">⚡ Jobs</a>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="mode-tabs">
+      <div class="mode-tab active" id="tab-manual" onclick="switchTab('manual')">✏️ Manual Input</div>
+      <div class="mode-tab" id="tab-bulk" onclick="switchTab('bulk')">📂 Bulk Upload</div>
+    </div>
+
+    <!-- ══ MANUAL TAB ══ -->
+    <div id="mode-manual">
+      <div class="card">
+        <div class="card-title">✏️ Student Details</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Student Name *</label>
+            <input type="text" id="in-name" placeholder="e.g. Manyata Anand" oninput="calcAuto()" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Current Class *</label>
+            <select id="in-class" onchange="calcAuto()">
+              <option value="">— Select Class —</option>
+              <option value="Nursery">Nursery</option>
+              <option value="L.K.G">L.K.G</option>
+              <option value="U.K.G">U.K.G</option>
+              <option value="1">Class 1</option>
+              <option value="2">Class 2</option>
+              <option value="3">Class 3</option>
+              <option value="4">Class 4</option>
+              <option value="5">Class 5</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+              <option value="11">Class 11</option>
+              <option value="12">Class 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rank *</label>
+            <input type="number" id="in-rank" placeholder="e.g. 1" min="1" oninput="calcAuto()">
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <div style="font-size:11px;font-weight:700;color:#4a6280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Auto-Calculated</div>
+          <div class="auto-grid">
+            <div class="auto-chip grade"><span class="chip-label">Grade</span><span class="chip-value" id="show-grade">—</span></div>
+            <div class="auto-chip promoted"><span class="chip-label">Promoted To</span><span class="chip-value" id="show-promoted">—</span></div>
+            <div class="auto-chip remark"><span class="chip-label">Remark</span><span class="chip-value" id="show-remark">—</span></div>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-gold" id="btn-generate" onclick="generateSingle()">🎓 Generate Certificate</button>
+          <button class="btn btn-secondary" onclick="resetManual()">↩ Reset</button>
+        </div>
+        <div class="progress-section" id="manual-progress">
+          <div class="progress-meta"><span id="manual-prog-label">Generating…</span><span id="manual-prog-pct">0%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="manual-prog-bar"></div></div>
+        </div>
+      </div>
+      <div class="card download-section" id="manual-result">
+        <div class="card-title">🏅 Certificate Ready</div>
+        <div class="cert-result">
+          <img id="cert-preview-img" src="" alt="Certificate">
+          <div><div class="cert-name" id="cert-name-display"></div><div class="cert-meta" id="cert-meta-display"></div></div>
+          <div class="actions-row" style="width:100%;margin-top:0;">
+            <button class="btn btn-primary" onclick="downloadSingle()">⬇ Download Image</button>
+            <button class="btn btn-secondary" onclick="generateAnother()">➕ New Certificate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BULK TAB ══ -->
+    <div id="mode-bulk" style="display:none;">
+
+      <!-- STEP 1: source + class -->
+      <div class="card" id="bulk-step1">
+        <div class="card-title">📂 Step 1 — Choose Source &amp; Class</div>
+
+        <div class="form-grid" style="margin-bottom:18px;">
+          <div class="form-group">
+            <label>Class *</label>
+            <select id="bulk-class">
+              <option value="">— Select Class —</option>
+              <option value="Nursery">Nursery</option>
+              <option value="L.K.G">L.K.G</option>
+              <option value="U.K.G">U.K.G</option>
+              <option value="1">Class 1</option>
+              <option value="2">Class 2</option>
+              <option value="3">Class 3</option>
+              <option value="4">Class 4</option>
+              <option value="5">Class 5</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+              <option value="11">Class 11</option>
+              <option value="12">Class 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Academic Session</label>
+            <input type="text" id="bulk-session" value="2025-26">
+          </div>
+        </div>
+
+        <!-- SOURCE TABS -->
+        <div class="src-tabs">
+          <button class="src-tab active" id="src-tab-pdf" onclick="switchSrc('pdf')">📄 PDF Marksheet</button>
+          <button class="src-tab" id="src-tab-json" onclick="switchSrc('json')">📋 JSON File</button>
+        </div>
+
+        <!-- PDF UPLOAD -->
+        <div id="src-pdf">
+          <div class="upload-zone" id="pdf-upload-zone"
+            onclick="document.getElementById('pdf-file-input').click()"
+            ondragover="handleDrag(event,'pdf-upload-zone')" ondrop="handleDrop(event,'pdf')" ondragleave="handleDragLeave('pdf-upload-zone')">
+            <div class="uz-icon">📄</div>
+            <h3>Drop PDF Marksheet here</h3>
+            <p>Nucleus Public School format<br>Extracts: Rank, Name, Percentage</p>
+            <input type="file" id="pdf-file-input" accept=".pdf" onchange="handlePdfFile(this.files[0])">
+          </div>
+        </div>
+
+        <!-- JSON UPLOAD -->
+        <div id="src-json" style="display:none;">
+          <div class="alert alert-info" style="margin-bottom:14px;">
+            <span>ℹ️</span>
+            <div>Expected format: <code style="font-size:11px;background:#dbeafe;padding:2px 6px;border-radius:4px;">{"class":"L.K.G","students":[{"rank":1,"name":"Manyata Anand"},...]}</code></div>
+          </div>
+          <div class="upload-zone" id="json-upload-zone"
+            onclick="document.getElementById('json-file-input').click()"
+            ondragover="handleDrag(event,'json-upload-zone')" ondrop="handleDrop(event,'json')" ondragleave="handleDragLeave('json-upload-zone')">
+            <div class="uz-icon">📋</div>
+            <h3>Drop JSON file here</h3>
+            <p>Must have <strong>students</strong> array with <strong>rank</strong> and <strong>name</strong> per entry<br>Class from JSON metadata or use field above</p>
+            <input type="file" id="json-file-input" accept=".json,application/json" onchange="handleJsonFile(this.files[0])">
+          </div>
+        </div>
+
+        <div id="bulk-parse-status" style="margin-top:14px;display:none;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4a6280;">
+            <div class="spinner-sm"></div>
+            <span id="bulk-parse-label">Parsing…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: review + generate -->
+      <div class="card" id="bulk-step2" style="display:none;">
+        <div class="card-title">📊 Step 2 — Review &amp; Generate</div>
+        <div class="alert alert-success" id="bulk-file-alert" style="display:none;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div style="font-size:13px;color:#4a6280;">
+            <strong id="bulk-student-count">0</strong> students · Class <strong id="bulk-class-display">—</strong>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="selectAllBulk(true)">☑ All</button>
+            <button class="btn btn-secondary btn-sm" onclick="selectAllBulk(false)">☐ None</button>
+          </div>
+        </div>
+        <div class="scroll-area">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" id="check-all-bulk" onchange="toggleAllBulk(this)" style="width:auto;padding:0;border:none;box-shadow:none;"></th>
+                <th>Rank</th><th>Name</th><th>Grade</th><th>Promoted To</th>
+              </tr>
+            </thead>
+            <tbody id="bulk-students-tbody"></tbody>
+          </table>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-gold" id="btn-batch-generate" onclick="startBatchGenerate()">🎓 Generate Selected</button>
+          <button class="btn btn-secondary" onclick="resetBulkTab()">↩ Upload New File</button>
+        </div>
+        <div class="progress-section" id="batch-progress">
+          <div class="progress-meta"><span id="batch-prog-label">Processing…</span><span id="batch-prog-pct">0%</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="batch-prog-bar"></div></div>
+          <div style="font-size:12px;color:#8aa0be;margin-top:4px;" id="batch-prog-sub"></div>
+        </div>
+        <div id="batch-log-wrap" style="display:none;margin-top:14px;">
+          <div style="font-size:11px;font-weight:700;color:#4a6280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Results</div>
+          <div class="batch-log" id="batch-log"></div>
+        </div>
+      </div>
+    </div><!-- end mode-bulk -->
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const SERVER='https://Abc12302.pythonanywhere.com';
+const SESSION='2025-26';
+
+// ── Class Progression ─────────────────────────────────────────
+const CLASS_ORDER=['Nursery','L.K.G','U.K.G','1','2','3','4','5','6','7','8','9','10','11','12'];
+function promotedClass(cls){
+  const i=CLASS_ORDER.indexOf(String(cls));
+  if(i===-1)return cls;
+  return CLASS_ORDER[Math.min(i+1,CLASS_ORDER.length-1)];
+}
+
+// ── Grade / Remark ────────────────────────────────────────────
+function gradeFromRank(r){
+  r=parseInt(r);if(isNaN(r)||r<1)return null;
+  if(r<=3)return'A+';if(r<=8)return'A';if(r<=15)return'B+';if(r<=25)return'B';if(r<=40)return'C+';return'C';
+}
+function remarkFromGrade(g){return{'A+':'Excellent Performance. Keep up the great work!','A':'Outstanding Achievement. Well done!','B+':'Very Good Performance. Keep it up!','B':'Good Performance. Keep working hard!','C+':'Satisfactory Performance. More effort needed.','C':'Needs improvement. Please work harder.'}[g]||''}
+
+// ── Manual Tab ────────────────────────────────────────────────
+function calcAuto(){
+  const rank=parseInt(document.getElementById('in-rank').value);
+  const cls=document.getElementById('in-class').value.trim();
+  const g=gradeFromRank(rank);
+  document.getElementById('show-grade').textContent=g||'—';
+  document.getElementById('show-promoted').textContent=cls?promotedClass(cls):'—';
+  document.getElementById('show-remark').textContent=g?remarkFromGrade(g):'—';
+}
+let lastSingleUrl='',lastSingleFilename='';
+async function generateSingle(){
+  const name=document.getElementById('in-name').value.trim();
+  const cls=document.getElementById('in-class').value.trim();
+  const rank=document.getElementById('in-rank').value.trim();
+  if(!name)return showToast('Enter student name','error');
+  if(!cls)return showToast('Select a class','error');
+  if(!rank)return showToast('Enter rank','error');
+  const grade=gradeFromRank(rank),promoted=promotedClass(cls),remark=remarkFromGrade(grade);
+  document.getElementById('manual-result').classList.remove('show');
+  const btn=document.getElementById('btn-generate');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Generating…';
+  showManualProg(true,25,'Sending to server…');
+  try{
+    const resp=await fetch(SERVER+'/generate_certificate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:name,class:cls,rank,grade,promotedTo:promoted,remark,session:SESSION})});
+    showManualProg(true,70,'Processing…');
+    if(!resp.ok){const e=await resp.json().catch(()=>({message:resp.statusText}));throw new Error(e.message)}
+    const data=await resp.json();
+    showManualProg(true,100,'Done!');
+    lastSingleUrl=SERVER+data.imageUrl;lastSingleFilename=data.filename;
+    const img=document.getElementById('cert-preview-img');
+    img.src=lastSingleUrl+'?t='+Date.now();img.style.display='block';
+    document.getElementById('cert-name-display').textContent=name;
+    document.getElementById('cert-meta-display').textContent=`Class ${cls} → ${promoted} · Rank ${rank} · Grade ${grade}`;
+    document.getElementById('manual-result').classList.add('show');
+    document.getElementById('manual-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+    logJob({studentName:name,class:cls,rank,grade,promoted,filename:data.filename,folder:data.folder,generatedAt:new Date().toISOString(),status:'completed'});
+    showToast('✅ Certificate generated!','success');
+  }catch(e){showToast('❌ '+e.message,'error')}
+  finally{btn.disabled=false;btn.innerHTML='🎓 Generate Certificate';setTimeout(()=>showManualProg(false),1400)}
+}
+function downloadSingle(){if(!lastSingleUrl)return;const a=document.createElement('a');a.href=lastSingleUrl;a.download=lastSingleFilename||'certificate.png';a.target='_blank';a.click()}
+function generateAnother(){document.getElementById('manual-result').classList.remove('show');document.getElementById('in-name').value='';document.getElementById('in-rank').value='';calcAuto();document.getElementById('in-name').focus();window.scrollTo({top:0,behavior:'smooth'})}
+function resetManual(){document.getElementById('in-name').value='';document.getElementById('in-class').value='';document.getElementById('in-rank').value='';calcAuto();document.getElementById('manual-result').classList.remove('show')}
+function showManualProg(show,pct,label){
+  document.getElementById('manual-progress').classList.toggle('show',show);
+  if(show){document.getElementById('manual-prog-bar').style.width=pct+'%';document.getElementById('manual-prog-pct').textContent=pct+'%';document.getElementById('manual-prog-label').textContent=label}
+}
+
+// ── Source Tab Switch ─────────────────────────────────────────
+let activeSrc='pdf';
+function switchSrc(src){
+  activeSrc=src;
+  document.getElementById('src-tab-pdf').classList.toggle('active',src==='pdf');
+  document.getElementById('src-tab-json').classList.toggle('active',src==='json');
+  document.getElementById('src-pdf').style.display=src==='pdf'?'block':'none';
+  document.getElementById('src-json').style.display=src==='json'?'block':'none';
+}
+
+// ── Drag / Drop ───────────────────────────────────────────────
+function handleDrag(e,zoneId){e.preventDefault();document.getElementById(zoneId).classList.add('drag-over')}
+function handleDragLeave(zoneId){document.getElementById(zoneId).classList.remove('drag-over')}
+function handleDrop(e,type){
+  e.preventDefault();
+  document.getElementById(type==='pdf'?'pdf-upload-zone':'json-upload-zone').classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(!f)return;
+  if(type==='pdf'&&f.type==='application/pdf') handlePdfFile(f);
+  else if(type==='json'&&(f.name.endsWith('.json')||f.type.includes('json'))) handleJsonFile(f);
+  else showToast('Wrong file type','error');
+}
+
+// ── PDF Parse ─────────────────────────────────────────────────
+async function handlePdfFile(file){
+  if(!file)return;
+  const cls=document.getElementById('bulk-class').value.trim();
+  if(!cls){showToast('Select class first','error');document.getElementById('bulk-class').focus();return}
+  showParseStatus('Parsing PDF pages…');
+  try{
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let txt='';
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const tc=await page.getTextContent();
+      txt+=tc.items.map(i=>i.str).join(' ')+'\n';
+    }
+    const students=parsePdfText(txt,cls);
+    hideParseStatus();
+    if(!students.length){showToast('No students found in PDF','error');return}
+    finishExtraction(students,cls,file.name,'PDF');
+  }catch(e){hideParseStatus();showToast('❌ PDF error: '+e.message,'error');console.error(e)}
+}
+
+function parsePdfText(text,cls){
+  /* Nucleus marksheet row: Rank Name ... Total Percentage */
+  const students=[],seen=new Set();
+  const session=document.getElementById('bulk-session').value.trim()||SESSION;
+  for(const rawLine of text.split('\n')){
+    const tokens=rawLine.trim().split(/\s+/);
+    if(tokens.length<5)continue;
+    const rankVal=parseInt(tokens[0]);
+    if(isNaN(rankVal)||rankVal<1||rankVal>200)continue;
+    const pct=parseFloat(tokens[tokens.length-1]);
+    if(isNaN(pct)||pct<10||pct>100)continue;
+    const total=parseInt(tokens[tokens.length-2]);
+    if(isNaN(total)||total<50||total>700)continue;
+    const mid=tokens.slice(1,tokens.length-2);
+    let nameEnd=0;
+    for(let i=0;i<mid.length;i++){if(/^\d+$/.test(mid[i])){nameEnd=i;break}nameEnd=i+1}
+    if(nameEnd===0)continue;
+    const name=mid.slice(0,nameEnd).join(' ').trim();
+    if(!name||name.length<2||!/[a-zA-Z]/.test(name)||seen.has(name))continue;
+    seen.add(name);
+    const grade=gradeFromRank(rankVal);
+    students.push({rank:String(rankVal),name,percentage:pct.toFixed(2),class:cls,promotedTo:promotedClass(cls),grade,remark:remarkFromGrade(grade),session});
+  }
+  return students;
+}
+
+// ── JSON Parse ────────────────────────────────────────────────
+async function handleJsonFile(file){
+  if(!file)return;
+  showParseStatus('Reading JSON…');
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    hideParseStatus();
+
+    // Extract class from JSON metadata or fall back to field
+    let cls=document.getElementById('bulk-class').value.trim();
+    if(!cls){
+      // Try to extract class from JSON metadata — supports both text ('L.K.G') and numeric ('8' / '08th')
+      let jsonClass=String(data.class||'').trim();
+      // If it looks like a padded number like "08th", strip non-digits and leading zeros
+      if(/^\d/.test(jsonClass.replace(/\D/g,''))){jsonClass=String(parseInt(jsonClass.replace(/\D/g,'')))||''}
+      if(jsonClass&&CLASS_ORDER.includes(jsonClass)){cls=jsonClass;document.getElementById('bulk-class').value=cls}
+    }
+    if(!cls){showToast('Select class (not found in JSON)','error');document.getElementById('bulk-class').focus();return}
+
+    // Support both { students:[{rank,name}] } and [{rank,name}] formats
+    const rawStudents=Array.isArray(data)?data:(Array.isArray(data.students)?data.students:[]);
+    if(!rawStudents.length){showToast('No students array found in JSON','error');return}
+
+    const session=document.getElementById('bulk-session').value.trim()||SESSION;
+    const students=rawStudents
+      .filter(s=>s.name&&s.rank)
+      .map(s=>{
+        const grade=gradeFromRank(s.rank);
+        return{rank:String(s.rank),name:String(s.name).trim(),class:cls,promotedTo:promotedClass(cls),grade,remark:remarkFromGrade(grade),session};
+      });
+
+    if(!students.length){showToast('No valid students with rank+name found','error');return}
+    finishExtraction(students,cls,file.name,'JSON');
+  }catch(e){hideParseStatus();showToast('❌ JSON error: '+e.message,'error');console.error(e)}
+}
+
+// ── After extraction: show review table ───────────────────────
+let parsedStudents=[];
+function finishExtraction(students,cls,filename,sourceType){
+  parsedStudents=students;
+  renderBulkTable(students);
+  document.getElementById('bulk-file-alert').style.display='flex';
+  document.getElementById('bulk-file-alert').innerHTML=`<span>✅</span><div><strong>${filename}</strong> — ${students.length} students via ${sourceType} · Class ${cls}</div>`;
+  document.getElementById('bulk-student-count').textContent=students.length;
+  document.getElementById('bulk-class-display').textContent=cls;
+  document.getElementById('bulk-step2').style.display='block';
+  document.getElementById('bulk-step2').scrollIntoView({behavior:'smooth',block:'nearest'});
+  showToast(`✅ ${students.length} students extracted (${sourceType})`,'success');
+}
+
+function renderBulkTable(students){
+  document.getElementById('bulk-students-tbody').innerHTML=students.map((s,i)=>`
+    <tr>
+      <td><input type="checkbox" class="row-check" data-i="${i}" checked style="width:auto;padding:0;border:none;box-shadow:none;"></td>
+      <td>${s.rank}</td>
+      <td>${s.name}</td>
+      <td><span class="pill pill-blue">${s.grade}</span></td>
+      <td><span class="pill pill-green">→ ${s.promotedTo}</span></td>
+    </tr>`).join('');
+  document.getElementById('check-all-bulk').checked=true;
+}
+
+function selectAllBulk(val){document.querySelectorAll('.row-check').forEach(c=>c.checked=val);document.getElementById('check-all-bulk').checked=val}
+function toggleAllBulk(cb){selectAllBulk(cb.checked)}
+
+// ── Batch Generate ────────────────────────────────────────────
+async function startBatchGenerate(){
+  const selected=[...document.querySelectorAll('.row-check:checked')].map(c=>parsedStudents[parseInt(c.dataset.i)]);
+  if(!selected.length)return showToast('Select at least one student','error');
+  const btn=document.getElementById('btn-batch-generate');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Generating…';
+  document.getElementById('batch-progress').classList.add('show');
+  document.getElementById('batch-log-wrap').style.display='block';
+  const logEl=document.getElementById('batch-log');
+  logEl.innerHTML='';
+  let done=0,failed=0;const total=selected.length;
+  for(const s of selected){
+    setBatchProg(done,total,s.name);
+    try{
+      const resp=await fetch(SERVER+'/generate_certificate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentName:s.name,class:s.class,rank:s.rank,grade:s.grade,promotedTo:s.promotedTo,remark:s.remark,session:s.session})});
+      if(!resp.ok)throw new Error('HTTP '+resp.status);
+      const data=await resp.json();
+      if(data.status!=='ok')throw new Error(data.message||'Server error');
+      done++;
+      addLog(logEl,s.name,`Rank ${s.rank} · Grade ${s.grade} · 📁 ${data.folder||''}`,true);
+      logJob({...s,status:'completed',filename:data.filename,folder:data.folder,generatedAt:new Date().toISOString()});
+    }catch(e){
+      failed++;
+      addLog(logEl,s.name,e.message,false);
+      logJob({...s,status:'failed',error:e.message,generatedAt:new Date().toISOString()});
+    }
+    await new Promise(r=>setTimeout(r,80));
+  }
+  setBatchProg(done+failed,total,'Completed');
+  btn.disabled=false;btn.innerHTML='🎓 Generate Selected';
+  showToast(`Done: ${done} ok, ${failed} failed`,done>0?'success':'error');
+}
+
+function setBatchProg(done,total,name){
+  const pct=total?Math.round((done/total)*100):0;
+  document.getElementById('batch-prog-bar').style.width=pct+'%';
+  document.getElementById('batch-prog-pct').textContent=pct+'%';
+  document.getElementById('batch-prog-label').textContent=name;
+  document.getElementById('batch-prog-sub').textContent=`${done} / ${total}`;
+}
+function addLog(container,name,detail,ok){
+  const d=document.createElement('div');
+  d.className='log-row '+(ok?'ok':'fail');
+  d.innerHTML=`<span>${ok?'✅':'❌'}</span><strong style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</strong><span style="color:#6b8ab0;font-size:11px;flex-shrink:0;margin-left:8px;">${detail}</span>`;
+  container.appendChild(d);container.scrollTop=container.scrollHeight;
+}
+function resetBulkTab(){
+  document.getElementById('bulk-step2').style.display='none';
+  document.getElementById('pdf-file-input').value='';
+  document.getElementById('json-file-input').value='';
+  document.getElementById('bulk-parse-status').style.display='none';
+  document.getElementById('batch-progress').classList.remove('show');
+  document.getElementById('batch-log-wrap').style.display='none';
+  parsedStudents=[];
+}
+
+// ── Parse status helpers ──────────────────────────────────────
+function showParseStatus(msg){document.getElementById('bulk-parse-status').style.display='block';document.getElementById('bulk-parse-label').textContent=msg}
+function hideParseStatus(){document.getElementById('bulk-parse-status').style.display='none'}
+
+// ── Tab Switch ────────────────────────────────────────────────
+function switchTab(tab){
+  document.getElementById('tab-manual').classList.toggle('active',tab==='manual');
+  document.getElementById('tab-bulk').classList.toggle('active',tab==='bulk');
+  document.getElementById('mode-manual').style.display=tab==='manual'?'block':'none';
+  document.getElementById('mode-bulk').style.display=tab==='bulk'?'block':'none';
+}
+
+// ── Job Log ───────────────────────────────────────────────────
+function logJob(data){const jobs=JSON.parse(localStorage.getItem('cert_jobs')||'[]');jobs.unshift({id:Date.now(),...data});if(jobs.length>300)jobs.splice(300);localStorage.setItem('cert_jobs',JSON.stringify(jobs))}
+
+// ── Server Check ──────────────────────────────────────────────
+async function checkServer(){
+  try{const r=await fetch(SERVER+'/health',{signal:AbortSignal.timeout(5000)});if(r.ok){document.getElementById('server-dot').classList.add('online');document.getElementById('server-status-text').textContent='Server online'}else throw new Error()}
+  catch{document.getElementById('server-status-text').textContent='Server offline'}
+}
+
+// ── Sidebar ───────────────────────────────────────────────────
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebar-overlay').classList.add('active')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('active')}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),4000)}
+
+document.addEventListener('DOMContentLoaded',checkServer);
+</script>
+</body>
+</html>
